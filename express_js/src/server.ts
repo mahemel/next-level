@@ -4,15 +4,15 @@ import express, {
     type Response,
 } from "express";
 import { Pool } from "pg";
-import "dotenv/config";
+
+import config from "./config";
+
 const app: Application = express();
-const port = 5100;
-const connectionString = process.env.DATABASE_URL;
 
 app.use(express.json());
 
 const pool = new Pool({
-    connectionString,
+    connectionString: config.connectionString,
 });
 
 const initDB = async () => {
@@ -39,7 +39,7 @@ initDB();
 
 app.get("/", (req: Request, res: Response) => {
     // res.send("Welcome to Express Server");
-    res.status(200).json({
+    return res.status(200).json({
         success: true,
         message: "Welcome to Express Server",
         author: "MH",
@@ -58,13 +58,13 @@ app.post("/api/v1/users", async (req: Request, res: Response) => {
             [name, email, password, age],
         );
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: "User Created",
             body: result.rows[0],
         });
     } catch (error: any) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: error?.message,
             error: error,
@@ -77,13 +77,20 @@ app.get("/api/v1/users", async (req: Request, res: Response) => {
         const result = await pool.query(`
         SELECT * FROM users
             `);
-        res.status(200).json({
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+        return res.status(200).json({
             success: true,
             message: "Users retrieved successfully!",
             data: result.rows,
         });
     } catch (error: any) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: error?.message,
             error: error,
@@ -97,13 +104,20 @@ app.get("/api/v1/users/:id", async (req: Request, res: Response) => {
         const result = await pool.query(`
             SELECT * FROM users WHERE id=${id}
         `);
-        res.status(200).json({
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+        return res.status(200).json({
             success: true,
             message: "User data retrieved successfully!",
             data: result.rows[0],
         });
     } catch (error: any) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: error?.message,
             error: error,
@@ -131,13 +145,13 @@ app.put("/api/v1/users/:id", async (req: Request, res: Response) => {
             [name ?? null, password ?? null, age ?? null, is_active ?? null],
         );
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "User Updated successfully!",
             data: result.rows[0],
         });
     } catch (error: any) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: error?.message,
             error: error,
@@ -145,6 +159,37 @@ app.put("/api/v1/users/:id", async (req: Request, res: Response) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server running on ${port}.`);
+app.delete("/api/v1/users/:id", async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            `
+            DELETE FROM users 
+            WHERE id=$1
+            `,
+            [id],
+        );
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "User deleted Successfully!",
+        });
+    } catch (error: any) {
+        return res.status(500).json({
+            success: false,
+            message: error?.message,
+            error: error,
+        });
+    }
+});
+
+app.listen(config.port, () => {
+    console.log(`Server running on ${config.port}.`);
 });
