@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import { userService } from "./user.service";
-import { Result } from "pg";
 
 const createUser = async (req: Request, res: Response) => {
     try {
