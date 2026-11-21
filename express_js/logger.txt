@@ -1,0 +1,7 @@
+
+
+Method : GET | URL: / | TIme: 1795259234471
+Method : GET | URL: /api/v1/users/10 | TIme: 1795259240329
+Method : GET | URL: /api/v1/users/10 | TIme: 1795259524855
+Method : GET | URL: /api/v1/users/profile | TIme: 1795259569420
+Method : GET | URL: /api/v1/users | TIme: 1795259686520
